@@ -20,9 +20,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq")
     private Long id;
     @Column
-    @NotBlank
+    @NotBlank(message = "User email cannot be null")
     private String email;
+    @Column
+    @NotBlank(message = "User password cannot be null")
     private String password;
+    @Column
+    @NotBlank(message = "Name caot")
     private String name;
     private Boolean active;
 
