@@ -26,7 +26,7 @@ public class User {
     @NotBlank(message = "User password cannot be null")
     private String password;
     @Column
-    @NotBlank(message = "Name caot")
+    @NotBlank(message = "Name cannot be null")
     private String name;
     private Boolean active;
 
