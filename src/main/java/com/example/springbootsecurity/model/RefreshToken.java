@@ -33,4 +33,8 @@ public class RefreshToken {
 
     @Column(name = "EXPIRY_DT", nullable = false)
     private Instant expiryDate;
+
+    public void incrementRefreshCount(){
+        refreshCount = refreshCount + 1;
+    }
 }
