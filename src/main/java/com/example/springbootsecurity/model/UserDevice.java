@@ -21,6 +21,9 @@ public class UserDevice {
     @JoinColumn(name = "USER_ID", nullable = false)
     private User user;
 
+    @Column(name = "DEVICE_TYPE")
+    private String deviceType;
+
     @Column(name = "DEVICE_ID", nullable = false)
     private String deviceId;
 
