@@ -51,7 +51,7 @@ public class JwtProvider {
         return claims.getExpiration();
     }
 
-    ublic boolean validateJwtToken(String authToken) {
+    public boolean validateJwtToken(String authToken) {
         try {
             Jwts.parser().setSigningKey("HelloWorld").parseClaimsJws(authToken);
             validateTokenIsNotForALoggedOutDevice(authToken);
@@ -70,13 +70,17 @@ public class JwtProvider {
     }
 
     private void validateTokenIsNotForALoggedOutDevice(String authToken) {
-        OnUserLogoutSuccessEvent previouslyLoggedOutEvent = loggedOutJwtTokenCache.getLogoutEventForToken(authToken);
+        OnUserLogoutSuccessEvent previouslyLoggedOutEvent = loggedOutJwtTokenCache.getLogoutEventFromToken(authToken);
         if (previouslyLoggedOutEvent != null) {
             String userEmail = previouslyLoggedOutEvent.getUserEmail();
             Date logoutEventDate = previouslyLoggedOutEvent.getEventTime();
             String errorMessage = String.format("Token corresponds to an already logged out user [%s] at [%s]. Please login again", userEmail, logoutEventDate);
             throw new InvalidTokenRequestException("JWT", authToken, errorMessage);
         }
+    }
+
+    public long getExpiryDuration(){
+        return 3600000;
     }
 
 }
