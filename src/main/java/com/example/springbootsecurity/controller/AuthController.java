@@ -2,11 +2,14 @@ package com.example.springbootsecurity.controller;
 
 import com.example.springbootsecurity.dto.LoginForm;
 import com.example.springbootsecurity.dto.SignUpForm;
+import com.example.springbootsecurity.dto.TokenRefreshRequest;
+import com.example.springbootsecurity.exception.TokenRefreshException;
 import com.example.springbootsecurity.model.*;
 import com.example.springbootsecurity.repo.RoleRepository;
 import com.example.springbootsecurity.repo.UserRepository;
 import com.example.springbootsecurity.response.ApiResponse;
 import com.example.springbootsecurity.response.JwtResponse;
+import com.example.springbootsecurity.response.UserIdentityAvailability;
 import com.example.springbootsecurity.security.JwtProvider;
 import com.example.springbootsecurity.service.RefreshTokenService;
 import com.example.springbootsecurity.service.UserDeviceService;
@@ -24,6 +27,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @RestController
@@ -133,6 +137,30 @@ public class AuthController {
         return ResponseEntity.created(location)
                 .body(new ApiResponse(true, "User registered successfully!"));
 
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> responseJwtToken(@Valid @RequestBody TokenRefreshRequest tokenRefreshRequest){
+        String requestRefreshToken = tokenRefreshRequest.getRefreshToken();
+
+        Optional<String> token = Optional.of(refreshTokenService.findByToken(requestRefreshToken)
+                .map(refreshToken -> {
+                    refreshTokenService.verifyExpiration(refreshToken);
+                    userDeviceService.verifyRefreshAvailability(refreshToken);
+                    refreshTokenService.increaseCount(refreshToken);
+                    return refreshToken;
+                })
+                .map(RefreshToken::getUserDevice)
+                .map(UserDevice::getUser)
+                .map(u -> jwtProvider.generateTokenFromUser(u))
+                .orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Missing refresh token in database.Please login again")));
+        return ResponseEntity.ok().body(new JwtResponse(token.get(), tokenRefreshRequest.getRefreshToken(), jwtProvider.getExpiryDuration()));
+    }
+
+    @GetMapping("/checkEmailAvailability")
+    public UserIdentityAvailability checkEmailAvailabily(@RequestParam(value = "email") String email){
+        Boolean isAvailable = !userRepository.existsByEmail(email);
+        return new UserIdentityAvailability(isAvailable);
     }
 
 }

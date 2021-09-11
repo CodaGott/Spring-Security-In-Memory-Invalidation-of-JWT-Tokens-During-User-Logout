@@ -3,6 +3,7 @@ package com.example.springbootsecurity.security;
 import com.example.springbootsecurity.cache.LoggedOutJwtTokenCache;
 import com.example.springbootsecurity.event.OnUserLogoutSuccessEvent;
 import com.example.springbootsecurity.exception.InvalidTokenRequestException;
+import com.example.springbootsecurity.model.User;
 import com.example.springbootsecurity.service.UserPrincipal;
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.Date;
 
 @Component
@@ -31,6 +33,18 @@ public class JwtProvider {
                 .setId(Long.toString(userPrincipal.getId()))
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)
+                .signWith(SignatureAlgorithm.HS512, "HelloWorld")
+                .compact();
+    }
+
+    public String generateTokenFromUser(User user){
+        Instant expiryDate = Instant.now().plusMillis(3600000);
+        return Jwts.builder()
+                .setSubject(user.getEmail())
+                .setIssuer("Therapex")
+                .setId(Long.toString(user.getId()))
+                .setIssuedAt(Date.from(Instant.now()))
+                .setExpiration(Date.from(expiryDate))
                 .signWith(SignatureAlgorithm.HS512, "HelloWorld")
                 .compact();
     }
