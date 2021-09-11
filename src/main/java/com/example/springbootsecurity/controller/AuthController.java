@@ -1,9 +1,8 @@
 package com.example.springbootsecurity.controller;
 
 import com.example.springbootsecurity.dto.LoginForm;
-import com.example.springbootsecurity.model.RefreshToken;
-import com.example.springbootsecurity.model.User;
-import com.example.springbootsecurity.model.UserDevice;
+import com.example.springbootsecurity.dto.SignUpForm;
+import com.example.springbootsecurity.model.*;
 import com.example.springbootsecurity.repo.RoleRepository;
 import com.example.springbootsecurity.repo.UserRepository;
 import com.example.springbootsecurity.response.ApiResponse;
@@ -12,6 +11,7 @@ import com.example.springbootsecurity.security.JwtProvider;
 import com.example.springbootsecurity.service.RefreshTokenService;
 import com.example.springbootsecurity.service.UserDeviceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,8 +19,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
+import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 
 @RestController
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -75,6 +79,60 @@ public class AuthController {
             return ResponseEntity.ok(new JwtResponse(jwtToken, refreshToken.getToken(), jwtProvider.getExpiryDuration()));
         }
         return ResponseEntity.badRequest().body(new ApiResponse(false, "User has been deactivated/locked !!"));
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpForm signUpRequest){
+        if (userRepository.existsByEmail(signUpRequest.getEmail())){
+            return new ResponseEntity<String>("Fail -> Email is already in use!",
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        User user = new User();
+        user.setName(signUpRequest.getName());
+        user.setEmail(signUpRequest.getEmail());
+        user.setPassword(signUpRequest.getPassword());
+
+        Set<String> strRole = signUpRequest.getRole();
+        Set<Role> roles = new HashSet<>();
+
+
+
+        strRole.forEach(role -> {
+            switch (role) {
+                case "admin":
+
+                    Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
+                            .orElseThrow(() -> new RuntimeException("Fail! -> Cause: User Role not found."));
+                    roles.add(adminRole);
+
+                    break;
+
+                case "therapist":
+                    Role therapistRole = roleRepository.findByName(RoleName.ROLE_THERAPIST)
+                            .orElseThrow(() -> new RuntimeException("Fail! -> Cause: User Role not found."));
+                    roles.add(therapistRole);
+
+                    break;
+
+                default:
+                    Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
+                            .orElseThrow(() -> new RuntimeException("Fail! -> Cause: User Role not found."));
+                    roles.add(userRole);
+            }
+        });
+
+        user.setRoles(roles);
+        user.activate();
+        User result = userRepository.save(user);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentContextPath().path("/user/me")
+                .buildAndExpand(result.getId()).toUri();
+
+        return ResponseEntity.created(location)
+                .body(new ApiResponse(true, "User registered successfully!"));
+
     }
 
 }
