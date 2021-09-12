@@ -1,6 +1,7 @@
 package com.example.springbootsecurity.event;
 
 import com.example.springbootsecurity.dto.LogOutRequest;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.context.ApplicationEvent;
@@ -10,6 +11,7 @@ import java.util.Date;
 
 @Getter
 @Setter
+@Data
 public class OnUserLogoutSuccessEvent extends ApplicationEvent {
     private static final long serialVersionUID = 1L;
     private final String userEmail;

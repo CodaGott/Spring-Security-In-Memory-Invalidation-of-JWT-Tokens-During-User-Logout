@@ -28,13 +28,13 @@ public class LoggedOutJwtTokenCache {
     }
 
     public void markLogoutEventForToken(OnUserLogoutSuccessEvent event){
-        String token = event.getTokent();
+        String token = event.getToken();
         if (tokenEventMap.containsKey(token)){
             log.info(String.format("Log out token for user [%s] is already present in the cache", event.getUserEmail()));
         }else {
             Date tokenExpirationDate = tokenProvider.getTokenExpiryFromJwt(token);
             long ttlForToken = getTTLForToken(tokenExpirationDate);
-            log.info(String.format("Logout token cache set for [%s] with a TTL of [%s] seconds. Token is due expiry at [%s]", event.getUserEmail(), ttlForToken, tokenExpiryDate));
+            log.info(String.format("Logout token cache set for [%s] with a TTL of [%s] seconds. Token is due expiry at [%s]", event.getUserEmail(), ttlForToken, tokenExpirationDate));
             tokenEventMap.put(token, event, ttlForToken, TimeUnit.SECONDS);
         }
     }
