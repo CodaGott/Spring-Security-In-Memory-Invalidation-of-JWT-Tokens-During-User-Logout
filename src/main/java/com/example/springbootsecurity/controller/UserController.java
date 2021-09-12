@@ -80,7 +80,15 @@ public class UserController {
     }
 
 
-
+    @PutMapping("/byId/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> activateUserById(@PathVariable Long id){
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        user.activate();
+        userRepository.save(user);
+        return ResponseEntity.ok(new ApiResponse(true, "User activated successfully!"));
+    }
 
 
 }
