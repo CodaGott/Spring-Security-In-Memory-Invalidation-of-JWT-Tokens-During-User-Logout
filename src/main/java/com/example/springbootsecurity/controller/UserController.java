@@ -90,5 +90,14 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse(true, "User activated successfully!"));
     }
 
+    @DeleteMapping("/byId/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> deleteUser(@PathVariable Long id){
+        User user userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        userRepository.delete(user);
+        return ResponseEntity.ok(new ApiResponse(true, "User deleted successfully!"));
+    }
+
 
 }
