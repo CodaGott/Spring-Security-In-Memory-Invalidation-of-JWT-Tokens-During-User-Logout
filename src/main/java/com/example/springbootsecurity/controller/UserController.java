@@ -1,7 +1,11 @@
 package com.example.springbootsecurity.controller;
 
+import com.example.springbootsecurity.dto.LogOutRequest;
+import com.example.springbootsecurity.event.OnUserLogoutSuccessEvent;
 import com.example.springbootsecurity.exception.ResourceNotFoundException;
+import com.example.springbootsecurity.exception.UserLogoutException;
 import com.example.springbootsecurity.model.User;
+import com.example.springbootsecurity.model.UserDevice;
 import com.example.springbootsecurity.repo.UserRepository;
 import com.example.springbootsecurity.response.ApiResponse;
 import com.example.springbootsecurity.response.UserProfile;
@@ -15,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -93,11 +98,24 @@ public class UserController {
     @DeleteMapping("/byId/{id}/activate")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse> deleteUser(@PathVariable Long id){
-        User user userRepository.findById(id)
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
         userRepository.delete(user);
         return ResponseEntity.ok(new ApiResponse(true, "User deleted successfully!"));
     }
 
+    @PutMapping("/logout")
+    public ResponseEntity<ApiResponse> logoutUser(@CurrentUser UserPrincipal currentUser,
+                                                  @Valid @RequestBody LogOutRequest logOutRequest){
+        String deviceId = logOutRequest.getDeviceInfo().getDeviceId();
+        UserDevice userDevice = userDeviceService.findByUserId(currentUser.getId())
+                .filter(device -> device.getDeviceId().equals(deviceId))
+                .orElseThrow(() -> new UserLogoutException(logOutRequest.getDeviceInfo().getDeviceId(), "Invalid device Id supplied. No matching device found for the given user "));
+        refreshTokenService.deleteById(userDevice.getRefreshToken().getId());
+
+        OnUserLogoutSuccessEvent logoutSuccessEvent = new OnUserLogoutSuccessEvent(currentUser.getEmail(), logOutRequest.getToken(), logOutRequest);
+        applicationEventPublisher.publishEvent(logoutSuccessEvent);
+        return ResponseEntity.ok(new ApiResponse(true, "User has successfully logged out from the system!"));
+    }
 
 }
