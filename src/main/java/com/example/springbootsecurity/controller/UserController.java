@@ -3,6 +3,7 @@ package com.example.springbootsecurity.controller;
 import com.example.springbootsecurity.exception.ResourceNotFoundException;
 import com.example.springbootsecurity.model.User;
 import com.example.springbootsecurity.repo.UserRepository;
+import com.example.springbootsecurity.response.ApiResponse;
 import com.example.springbootsecurity.response.UserProfile;
 import com.example.springbootsecurity.service.CurrentUser;
 import com.example.springbootsecurity.service.RefreshTokenService;
@@ -10,6 +11,7 @@ import com.example.springbootsecurity.service.UserDeviceService;
 import com.example.springbootsecurity.service.UserPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,5 +68,19 @@ public class UserController {
 
         return new UserProfile(user.getId(), user.getEmail(), user.getName(), user.getActive());
     }
+
+    @PutMapping("/byId/{id}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> deactivateUserById(@PathVariable Long id){
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        user.deactivate();
+        userRepository.save(user);
+        return ResponseEntity.ok(new ApiResponse(true, "User deactivated successfully!"));
+    }
+
+
+
+
 
 }
