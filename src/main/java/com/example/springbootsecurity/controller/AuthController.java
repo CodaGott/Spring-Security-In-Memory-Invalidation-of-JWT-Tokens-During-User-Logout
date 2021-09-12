@@ -158,7 +158,7 @@ public class AuthController {
     }
 
     @GetMapping("/checkEmailAvailability")
-    public UserIdentityAvailability checkEmailAvailabily(@RequestParam(value = "email") String email){
+    public UserIdentityAvailability checkEmailAvailability(@RequestParam(value = "email") String email){
         Boolean isAvailable = !userRepository.existsByEmail(email);
         return new UserIdentityAvailability(isAvailable);
     }
