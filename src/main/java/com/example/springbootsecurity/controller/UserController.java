@@ -13,10 +13,12 @@ import com.example.springbootsecurity.service.CurrentUser;
 import com.example.springbootsecurity.service.RefreshTokenService;
 import com.example.springbootsecurity.service.UserDeviceService;
 import com.example.springbootsecurity.service.UserPrincipal;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
+@Slf4j
 @RequestMapping("/api/user")
 public class UserController {
 
@@ -106,7 +109,7 @@ public class UserController {
 
     @PutMapping("/logout")
     public ResponseEntity<ApiResponse> logoutUser(@CurrentUser UserPrincipal currentUser,
-                                                  @Valid @RequestBody LogOutRequest logOutRequest){
+                                                  @Valid @RequestBody LogOutRequest logOutRequest) {
         String deviceId = logOutRequest.getDeviceInfo().getDeviceId();
         UserDevice userDevice = userDeviceService.findByUserId(currentUser.getId())
                 .filter(device -> device.getDeviceId().equals(deviceId))

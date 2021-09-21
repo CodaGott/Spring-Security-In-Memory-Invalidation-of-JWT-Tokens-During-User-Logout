@@ -95,7 +95,7 @@ public class AuthController {
         User user = new User();
         user.setName(signUpRequest.getName());
         user.setEmail(signUpRequest.getEmail());
-        user.setPassword(signUpRequest.getPassword());
+        user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
 
         Set<String> strRole = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();
